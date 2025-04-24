@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Number Challenge</title>
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        /* Animated Gradient Background */
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Glassmorphism Container */
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: -1;
+            animation: pulse 8s infinite linear;
+        }
+
+        @keyframes pulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Animated Title */
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(90deg, #fff, #a5f8ff, #fff);
+            background-size: 200% auto;
+            color: #000;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 3s linear infinite;
+            text-shadow: 0 0 10px rgba(165, 248, 255, 0.3);
+        }
+
+        @keyframes shine {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        /* Game Info */
+        .game-info {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            text-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+
+        .attempts {
+            font-weight: bold;
+            color: #fffc;
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            margin-top: 0.5rem;
+        }
+
+        /* Input & Button Styling */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="number"] {
+            padding: 0.8rem 1rem;
+            border: none;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 1.2rem;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        input[type="number"]:focus {
+            background: rgba(255,255,255,0.3);
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+        }
+
+        input[type="number"]::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .btn:hover::after {
+            transform: translateX(100%);
+        }
+
+        /* Message Display */
+        .message {
+            min-height: 2rem;
+            margin: 1rem 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .message.correct {
+            color: #4cff8f;
+            text-shadow: 0 0 10px rgba(76, 255, 143, 0.5);
+        }
+
+        .message.wrong {
+            color: #ff6b6b;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        /* Game Over Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+
+        .modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .modal h2 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .modal p {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Number Animation */
+        .number-display {
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+            background: linear-gradient(90deg, #ff8a00, #e52e71, #4cff8f);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: numberReveal 0.5s ease-out forwards;
+        }
+
+        @keyframes numberReveal {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            .container {
+                padding: 1.5rem;
+            }
+            
+            .btn {
+                padding: 0.7rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mystery Number Challenge</h1>
+        <div class="game-info">
+            <p>Guess the secret number between 1 and 100</p>
+            <div class="attempts">Attempts left: <span id="attempts">7</span></div>
+        </div>
+        
+        <div class="input-group">
+            <input type="number" id="guessInput" placeholder="Enter your guess" min="1" max="100">
+            <button class="btn" id="guessBtn">Submit Guess</button>
+        </div>
+        
+        <div class="message" id="message"></div>
+    </div>
+    
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle">Congratulations!</h2>
+            <div class="number-display" id="secretNumber"></div>
+            <p id="modalMessage">You guessed the correct number!</p>
+            <button class="btn" id="playAgainBtn">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        // Game Variables
+        let secretNumber = Math.floor(Math.random() * 100) + 1;
+        let attemptsLeft = 7;
+        let gameOver = false;
+        
+        // DOM Elements
+        const guessInput = document.getElementById('guessInput');
+        const guessBtn = document.getElementById('guessBtn');
+        const message = document.getElementById('message');
+        const attemptsDisplay = document.getElementById('attempts');
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const secretNumberDisplay = document.getElementById('secretNumber');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        
+        // Focus input on load
+        guessInput.focus();
+        
+        // Game Functions
+        function checkGuess() {
+            if (gameOver) return;
+            
+            const userGuess = parseInt(guessInput.value);
+            
+            // Validate input
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > 100) {
+                showMessage('Please enter a number between 1 and 100', 'wrong');
+                return;
+            }
+            
+            // Decrease attempts
+            attemptsLeft--;
+            attemptsDisplay.textContent = attemptsLeft;
+            
+            // Check guess
+            if (userGuess === secretNumber) {
+                // Correct guess
+                showMessage('Correct! You guessed it!', 'correct');
+                endGame(true);
+            } else if (attemptsLeft === 0) {
+                // No attempts left
+                showMessage(`Game Over! The number was ${secretNumber}`, 'wrong');
+                endGame(false);
+            } else {
+                // Wrong guess
+                const hint = userGuess < secretNumber ? 'Too Low!' : 'Too High!';
+                showMessage(`${hint} Try again!`, 'wrong');
+            }
+            
+            // Clear input
+            guessInput.value = '';
+            guessInput.focus();
+        }
+        
+        function showMessage(msg, type) {
+            message.textContent = msg;
+            message.className = 'message';
+            message.classList.add(type, 'show');
+            
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                message.classList.remove('show');
+            }, 3000);
+        }
+        
+        function endGame(isWin) {
+            gameOver = true;
+            guessInput.disabled = true;
+            guessBtn.disabled = true;
+            
+            // Set modal content
+            if (isWin) {
+                modalTitle.textContent = 'Congratulations!';
+                modalMessage.textContent = `You guessed the number in ${7 - attemptsLeft} attempts!`;
+            } else {
+                modalTitle.textContent = 'Game Over!';
+                modalMessage.textContent = `The secret number was ${secretNumber}. Better luck next time!`;
+            }
+            
+            secretNumberDisplay.textContent = secretNumber;
+            modal.classList.add('show');
+        }
+        
+        function resetGame() {
+            // Reset game variables
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            attemptsLeft = 7;
+            gameOver = false;
+            
+            // Reset UI
+            attemptsDisplay.textContent = attemptsLeft;
+            message.className = 'message';
+            guessInput.disabled = false;
+            guessBtn.disabled = false;
+            guessInput.value = '';
+            guessInput.focus();
+            modal.classList.remove('show');
+        }
+        
+        // Event Listeners
+        guessBtn.addEventListener('click', checkGuess);
+        
+        guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkGuess();
+            }
+        });
+        
+        playAgainBtn.addEventListener('click', resetGame);
+        
+        // Add subtle background particles
+        document.addEventListener('DOMContentLoaded', () => {
+            const container = document.querySelector('.container');
+            
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.width = `${Math.random() * 5 + 2}px`;
+                particle.style.height = particle.style.width;
+                particle.style.background = 'rgba(255,255,255,0.3)';
+                particle.style.borderRadius = '50%';
+                particle.style.top = `${Math.random() * 100}%`;
+                particle.style.left = `${Math.random() * 100}%`;
+                particle.style.zIndex = '-1';
+                
+                // Animation
+                particle.style.animation = `float ${Math.random() * 10 + 5}s linear infinite`;
+                
+                // Add keyframes dynamically
+                const keyframes = `
+                    @keyframes float {
+                        0% { transform: translate(0, 0); opacity: 0; }
+                        10% { opacity: 1; }
+                        90% { opacity: 1; }
+                        100% { transform: translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 - 50}px); opacity: 0; }
+                    }
+                `;
+                
+                const style = document.createElement('style');
+                style.innerHTML = keyframes;
+                document.head.appendChild(style);
+                
+                container.appendChild(particle);
+            }
+        });
+    </script>
+</body>
+</html>
